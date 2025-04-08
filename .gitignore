@@ -1,0 +1,3 @@
+# Ignorar los archivos grandes del modelo
+deepseek/*.bin
+deepseek/*.index.json
