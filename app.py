@@ -11,7 +11,7 @@ model_path = hf_hub_download(
 # Paso 2: Carga el modelo
 llm = Llama(
     model_path=model_path,
-    n_ctx=512,       # Puedes ajustar esto según el modelo
+    n_ctx=128,       # Puedes ajustar esto según el modelo
     n_threads=4      # En Render, normalmente tienes 4 hilos
 )
 
