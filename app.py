@@ -1,36 +1,38 @@
 from flask import Flask, request, jsonify
 from llama_cpp import Llama
+from huggingface_hub import hf_hub_download
 
-# Ruta completa al modelo GGUF o .bin
-MODEL_PATH = "C:/Modelos/DeepSeek/deepseek.gguf"
-
-# Cargar el modelo usando llama-cpp-python
-llm = Llama(
-    model_path=MODEL_PATH,
-    n_ctx=2048,
-    n_threads=8,  # Ajusta según tu CPU
-    n_batch=8,
-    verbose=True
+# Paso 1: Descarga el modelo automáticamente desde Hugging Face
+model_path = hf_hub_download(
+    repo_id="schwagerino/deepseek-gguf",
+    filename="deepseek.gguf"
 )
 
+# Paso 2: Carga el modelo
+llm = Llama(
+    model_path=model_path,
+    n_ctx=512,       # Puedes ajustar esto según el modelo
+    n_threads=4      # En Render, normalmente tienes 4 hilos
+)
+
+# Paso 3: Crea la app Flask
 app = Flask(__name__)
 
-@app.route("/generate", methods=["POST"])
-def generate():
-    data = request.get_json()
-    prompt = data.get("prompt", "")
-    
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_input = request.json.get("message", "")
+    if not user_input:
+        return jsonify({"error": "No message provided"}), 400
+
     output = llm(
-        prompt=prompt,
+        user_input,
         max_tokens=256,
-        stop=["</s>"],
         temperature=0.7,
-        echo=False,
+        stop=["</s>"]
     )
-    
-    result = output["choices"][0]["text"]
-    return jsonify({"response": result.strip()})
 
+    return jsonify({"response": output["choices"][0]["text"]})
+
+# Paso 4: Inicia la app
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    app.run(host="0.0.0.0", port=10000)
