@@ -18,21 +18,27 @@ llm = Llama(
 # Paso 3: Crea la app Flask
 app = Flask(__name__)
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    user_input = request.json.get("message", "")
-    if not user_input:
-        return jsonify({"error": "No message provided"}), 400
+@app.route("/")
+def home():
+    return "API de DeepSeek funcionando 🚀"
 
-    output = llm(
-        user_input,
-        max_tokens=256,
+@app.route("/generate", methods=["POST"])
+def generate():
+    data = request.get_json()
+    prompt = data.get("prompt", "")
+    if not prompt:
+        return jsonify({"error": "Falta el prompt"}), 400
+
+    output = llm.create_chat_completion(
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=512,
         temperature=0.7,
-        stop=["</s>"]
     )
 
-    return jsonify({"response": output["choices"][0]["text"]})
+    return jsonify(output)
 
-# Paso 4: Inicia la app
+# Paso 4: Inicia la app (solo en desarrollo local)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
